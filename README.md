@@ -10,7 +10,7 @@
 
 ### project/plugins.sbt
 
-    addSbtPlugin("dotdata" % "sbt-config" % "<latest_version>")
+    addSbtPlugin("com.dotdata" % "sbt-config" % "<latest_version>")
 
 Run `sbt reload` after adding the plugin.
 

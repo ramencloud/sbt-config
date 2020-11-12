@@ -47,7 +47,6 @@ object SbtConfig extends AutoPlugin {
       )
     }
 
-
     // Linting
 
     lazy val testScalastyle = taskKey[Unit]("testScalastyle")
