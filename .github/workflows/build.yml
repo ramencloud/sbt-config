@@ -34,6 +34,11 @@ jobs:
     - name: Build and test
       run: |
         sbt -v "clean; compile; test"
+    - name: Publish
+      run: |
+        sbt -v "publishLocal"
+    - name: Clean up
+      run: |
         rm -rf "$HOME/.ivy2/local" || true
         rm -r $(find $HOME/.sbt/boot -name "*-SNAPSHOT") || true
         find $HOME/Library/Caches/Coursier/v1        -name "ivydata-*.properties" -delete || true
