@@ -1,13 +1,12 @@
 sbtPlugin := true
 
-organization in ThisBuild := "dotdata"
+organization in ThisBuild := "com.dotdata"
 name := "sbt-config"
-version in ThisBuild := "0.1.4-SNAPSHOT"
+version in ThisBuild := "0.1.0-SNAPSHOT"
 
 scalaVersion := "2.12.5"
 
-addSbtPlugin("com.lucidchart"  %% "sbt-scalafmt"  % "1.16")
-addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.0.3")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.2")
 
 addSbtPlugin("org.scoverage" %% "sbt-scoverage" % "1.5.1")
 addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "1.0.0")

@@ -1,11 +1,11 @@
 package dotdata.sbt
 
-import com.lucidchart.sbt.scalafmt.ScalafmtCorePlugin.autoImport._
+import org.scalafmt.sbt.ScalafmtPlugin.autoImport._
 import org.scalastyle.sbt.ScalastylePlugin.autoImport._
 import scoverage.ScoverageKeys._
 import sbt.Keys._
 import sbt._
-
+import scala.collection.JavaConverters._
 
 object SbtConfig extends AutoPlugin {
 
@@ -13,80 +13,35 @@ object SbtConfig extends AutoPlugin {
 
     // Compiler settings
 
-    private val scalacDefaultOptions = Seq(
-      "-unchecked",
-      "-deprecation",
-      "-feature",
-      "-encoding", "utf8")
-
-    private val scalacLanguageFeatures = Seq(
-      "-language:higherKinds",
-      "-language:implicitConversions",
-      "-language:postfixOps"
-    )
-
-    // Allow some behavior while interactively working on Scala code from the REPL
-    private val scalacOptionsConsoleExclusions: Seq[String] = Seq(
-      "-Xlint",
-      "-Xfatal-warnings",
-      "-Ywarn-unused-import"
-    )
-
-    private val scalacOptionsNotInTest: Seq[String] = Seq(
-      "-Ywarn-value-discard"
-    )
-
-    def compilerSettings(failOnWarnings: Boolean = false, versionOfScala: String = "2.11.11"): Seq[Setting[_]] = Seq(
-      scalaVersion := versionOfScala,
-      scalacOptions := (scalacDefaultOptions ++ scalacLanguageFeatures),
-      scalacOptions ++= (if(failOnWarnings) Seq("-Xfatal-warnings") else Seq.empty),
-      scalacOptions in Compile ++= scalacOptionsNotInTest,
-      scalacOptions in Test --= scalacOptionsNotInTest,
-      scalacOptions in (Compile, console) := (scalacDefaultOptions ++ scalacLanguageFeatures) diff scalacOptionsConsoleExclusions,
-      scalacOptions in (Test, console) := (scalacDefaultOptions ++ scalacLanguageFeatures) diff scalacOptionsConsoleExclusions,
-      fork := true
-    )
-
-    /* Following settings allow fatal warnings except for deprecations (which might be needed for migrations)
-      compile in Compile := {
-        val compiled = (compile in Compile).value
-        val problems = compiled.readSourceInfos().getAllSourceInfos.asScala.flatMap {
-          case (_, info) =>
-            info.getReportedProblems
-        }
-
-        val deprecationsOnly = problems.forall { problem =>
-          problem.message().contains("is deprecated")
-        }
-
-        if (!deprecationsOnly) sys.error("Fatal warnings: some warnings other than deprecations were found.")
-        compiled
-      }
-     */
-
+    def compilerSettings(versionOfScala: String = "2.11.11"): Def.SettingsDefinition = {
+      Seq(
+        scalaVersion := versionOfScala,
+        fork := true,
+        scalacOptions := Seq(
+          "-language:higherKinds",
+          "-language:implicitConversions",
+          "-language:postfixOps",
+          "-encoding",
+          "utf8"
+        )
+      )
+    }
 
     // Formatting
 
     lazy val formatSettings: Def.SettingsDefinition = {
       val generateScalafmtConfTask = Def.task {
         val scalafmtConfStream = getClass.getClassLoader.getResourceAsStream("scalafmt.conf")
-        val formatConfFile = resourceManaged.value / "scalafmt.conf"
+        val formatConfFile     = resourceManaged.value / "scalafmt.conf"
         IO.delete(formatConfFile)
         IO.write(formatConfFile, IO.readBytes(scalafmtConfStream))
         formatConfFile
       }
       Seq(
         scalafmtConfig := generateScalafmtConfTask.value,
-        // TODO: Discuss, scalafmtOnCompile := true and scalafmt on test
-        scalafmt in Compile := {
-          (scalafmt in Compile).dependsOn(scalafmt in Test).value
-        },
-        // scalafmt::test -> tests scalafmt format in src/main + src/test (added behavior)
-        test in scalafmt in Compile := {
-          (test in scalafmt in Compile).dependsOn(test in scalafmt in Test).value
-        },
-        test in Test := {
-          (test in scalafmt in Compile).value
+        test in Test := { // Configuration below for formatting "main" and "test" folders on `sbt test`
+          (Compile / scalafmt).value
+          (Test / scalafmt).value
           (test in Test).value
         }
       )
@@ -94,20 +49,6 @@ object SbtConfig extends AutoPlugin {
 
 
     // Linting
-
-    val scalacLintingSettings: Def.SettingsDefinition = Seq(
-      scalacOptions ++= {
-        Seq(
-          "-Xlint:_,-unused,-missing-interpolator",
-          // "-Ywarn-numeric-widen", potentially enable
-          "-Ywarn-dead-code",
-          "-Ywarn-unused-import",
-          "-Yno-adapted-args",
-          "-Ywarn-unused:_,-explicits,-implicits"
-        )
-      }
-    )
-
 
     lazy val testScalastyle = taskKey[Unit]("testScalastyle")
 
@@ -150,8 +91,63 @@ object SbtConfig extends AutoPlugin {
       )
     }
 
-    lazy val lintingSettings: Def.SettingsDefinition = scalacLintingSettings ++ scalastyleSettings()
+    val fatalWarningsExceptDeprecation: Def.SettingsDefinition = Seq( // Deprecations are not immediate and need a notice
+      compile in Compile := {
 
+        val compiled = (compile in Compile).value
+        val problems = compiled.readSourceInfos().getAllSourceInfos.asScala.flatMap {
+          case (_, info) =>
+            info.getReportedProblems
+        }
+
+        val deprecationsOnly = problems.forall { problem =>
+          problem.message().contains("is deprecated")
+        }
+
+        if (!deprecationsOnly) sys.error("Fatal warnings: some warnings other than deprecations were found.")
+        compiled
+      })
+
+    val scalacLintingSettings: Seq[String] = Seq(
+      "-Xlint:_,-unused,-missing-interpolator",
+      "-unchecked",
+      "-deprecation",
+      "-feature",
+      // Later consider "-Ywarn-numeric-widen",
+      "-Ywarn-dead-code",
+      "-Ywarn-unused-import",
+      "-Yno-adapted-args",
+      "-Ywarn-unused:_,-explicits,-implicits"
+    )
+
+    // Allow some behavior while interactively working on Scala code from the REPL
+    private val scalacOptionsConsoleExclusions: Seq[String] = Seq(
+      "-Xlint",
+      "-Xfatal-warnings",
+      "-Ywarn-unused-import"
+    )
+
+    private val scalacOptionsNotInTest: Seq[String] = Seq(
+      "-Ywarn-value-discard"
+    )
+
+    def lintingSettings(failOnWarnings: Boolean = true): Def.SettingsDefinition = {
+
+      val scalacOptionsSettings =
+        Seq(
+          scalacOptions ++= scalacLintingSettings,
+          scalacOptions in Compile ++= scalacOptionsNotInTest,
+          scalacOptions in Test --= scalacOptionsNotInTest,
+          scalacOptions in (Compile, console) --= scalacOptionsConsoleExclusions,
+          scalacOptions in (Test, console) --= scalacOptionsConsoleExclusions
+        )
+
+      if (failOnWarnings) {
+        scalacOptionsSettings ++ fatalWarningsExceptDeprecation ++ scalastyleSettings()
+      } else {
+        scalacOptionsSettings ++ scalastyleSettings()
+      }
+    }
 
     // Testing
 
@@ -170,7 +166,6 @@ object SbtConfig extends AutoPlugin {
         coverageHighlighting := true
       )
     }
-
 
     // Publishing
 
@@ -197,10 +192,9 @@ object SbtConfig extends AutoPlugin {
       }
     }
 
-
-    def dotDataSettings(failOnWarnings: Boolean = false, testCoverage: Double = 80.00, publishingEnabled: Boolean = false): Def.SettingsDefinition = {
-      compilerSettings(failOnWarnings) ++
-        formatSettings ++ lintingSettings ++ testingSettings ++
+    def dotDataSettings(failOnWarnings: Boolean = true, testCoverage: Double = 80.00, publishingEnabled: Boolean = false): Def.SettingsDefinition = {
+      compilerSettings() ++
+        formatSettings ++ lintingSettings(failOnWarnings) ++ testingSettings ++
         coverageSettings(minimumCoverage = testCoverage) ++
         publishSettings(publishingEnabled)
     }
