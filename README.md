@@ -1,5 +1,7 @@
 # dotData sbt config
 
+![Build Status](https://github.com/ramencloud/sbt-config/workflows/Continuous%20Integration/badge.svg)
+
 ## Adding the plugin to your project
 
 ### Publish the plugin locally
@@ -10,7 +12,7 @@
 
     addSbtPlugin("dotdata" % "sbt-config" % "<latest_version>")
 
-Run `sbt reload` after adding a plugin.
+Run `sbt reload` after adding the plugin.
 
 ### build.sbt
 
