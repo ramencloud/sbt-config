@@ -4,10 +4,6 @@
 
 ## Adding the plugin to your project
 
-### Publish the plugin locally
-
-    sbt publishLocal
-
 ### project/plugins.sbt
 
     addSbtPlugin("com.dotdata" % "sbt-config" % "<latest_version>")
