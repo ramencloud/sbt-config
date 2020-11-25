@@ -26,3 +26,7 @@ To opt-out from some settings, use the following format:
       .settings(coverageSettings(minimumCoverage = 80.00))
       .settings(publishSettings(publishingEnabled = false))
       .settings(... other settings ...
+
+## References
+
+This sbt plugin is inspired by [https://github.com/driver-oss/sbt-settings](https://github.com/driver-oss/sbt-settings).

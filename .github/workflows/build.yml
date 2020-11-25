@@ -36,7 +36,7 @@ jobs:
         sbt -v "clean; compile; test"
     - name: Publish
       run: |
-        sbt -v "publishLocal"
+        sbt -v "publish"
     - name: Clean up
       run: |
         rm -rf "$HOME/.ivy2/local" || true
