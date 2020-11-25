@@ -154,7 +154,9 @@ object SbtConfig extends AutoPlugin {
       // Options from http://www.scalatest.org/user_guide/using_scalatest_with_sbt:
       //  - -o: output to stdout (default, but required for other flags)
       //  - D: Show durations of each test
-      testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-oD")
+      //  - F: Show full stack traces
+      //  - -u: Causes test results to be written to junit-style xml files in the named directory so CI can pick it up
+      testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-oDF", "-u", "target/test-reports")
     )
 
     def coverageSettings(excludedPackages: String = "", minimumCoverage: Double = 80.00, failOnMinimum: Boolean = true): Def.SettingsDefinition = {
@@ -171,10 +173,11 @@ object SbtConfig extends AutoPlugin {
     def publishSettings(publishingEnabled: Boolean): Def.SettingsDefinition = {
       if (publishingEnabled) {
         Seq(
-          organization := "com.dotdata", // TODO: or "dotdata"
+          organization := "com.dotdata",
           publishMavenStyle := true,
           publishTo := {
-            val nexus = Option(System.getProperty("REPOSITORY_URL")).getOrElse("http://ec2-52-38-203-205.us-west-2.compute.amazonaws.com") // TODO: Discuss
+            // Repository internal caching
+            val nexus = Option(System.getProperty("REPOSITORY_URL")).getOrElse("http://ec2-52-38-203-205.us-west-2.compute.amazonaws.com")
             if (isSnapshot.value) {
               Some(("snapshots" at nexus + "/repository/maven-snapshots;build.timestamp=" + new java.util.Date().getTime).withAllowInsecureProtocol(true))
             } else {
@@ -184,7 +187,7 @@ object SbtConfig extends AutoPlugin {
         )
       } else {
         Seq(
-          organization := "com.dotdata", // TODO: or "dotdata"
+          organization := "com.dotdata",
           publish := {},
           publishLocal := {}
         )
