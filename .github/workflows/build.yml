@@ -35,6 +35,9 @@ jobs:
       run: |
         sbt -v "clean; compile; test"
     - name: Publish
+      env:
+        PUBLISH_TO_GITHUB_USERNAME: ${{ secrets.PUBLISH_TO_GITHUB_USERNAME }}
+        PUBLISH_TO_GITHUB_TOKEN: ${{ secrets.PUBLISH_TO_GITHUB_TOKEN }}
       run: |
         sbt -v "publish"
     - name: Clean up
