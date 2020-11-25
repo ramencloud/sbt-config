@@ -10,11 +10,11 @@ val baseVersion = "0.1"
 
 version in ThisBuild := {
   if (sys.env.get("GITHUB_REF").contains("refs/heads/master")) {
-    s"$baseVersion.${sys.env("GITHUB_RUN_ID")}"
+    s"$baseVersion.${sys.env("GITHUB_RUN_NUMBER")}"
   } else {
     val githubVersion =
       for {
-        runId <- sys.env.get("GITHUB_RUN_ID")
+        runId <- sys.env.get("GITHUB_RUN_NUMBER")
         sha <- sys.env.get("GITHUB_SHA")
       } yield {
         s"$baseVersion.$runId-$sha"
