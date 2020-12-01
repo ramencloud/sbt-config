@@ -6,6 +6,7 @@
 
 ### project/plugins.sbt
 
+    resolvers +=  "sbt-config-releases" at "https://maven.pkg.github.com/ramencloud/sbt-config"
     addSbtPlugin("com.dotdata" % "sbt-config" % "<latest_version>")
 
 Run `sbt reload` after adding the plugin.

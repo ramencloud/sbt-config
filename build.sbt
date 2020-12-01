@@ -1,14 +1,14 @@
-sbtPlugin := true
+sbtPlugin in ThisBuild := true
 
-organization in ThisBuild := "com.dotdata"
+organization := "com.dotdata"
+name := "sbt-config"
+scalaVersion := "2.12.12"
 homepage := Some(url("https://github.com/ramencloud/sbt-config"))
 licenses := Seq("Apache 2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
 
-name := "sbt-config"
-
 val baseVersion = "0.1"
 
-version in ThisBuild := {
+version := {
   if (sys.env.get("GITHUB_REF").contains("refs/heads/master")) {
     s"$baseVersion.${sys.env("GITHUB_RUN_NUMBER")}"
   } else {
@@ -26,7 +26,7 @@ version in ThisBuild := {
   }
 }
 
-publishMavenStyle := true
+publishMavenStyle := false
 
 publishTo := Some("GitHub Package Registry" at "https://maven.pkg.github.com/ramencloud/sbt-config")
 credentials ++= {
@@ -45,14 +45,12 @@ scmInfo := Some(
   )
 )
 
-scalaVersion := "2.12.5"
-
-addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.2")
+addSbtPlugin("org.scalameta"  % "sbt-scalafmt"           % "2.4.2")
 addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "1.0.0")
-addSbtPlugin("org.scoverage" %% "sbt-scoverage" % "1.5.1")
+addSbtPlugin("org.scoverage"  %% "sbt-scoverage"         % "1.5.1")
 
 // Make the build faster, since there is no Scaladocs anyway
-sources in (Compile,doc) := Seq.empty
+sources in (Compile, doc) := Seq.empty
 publishArtifact in (Compile, packageDoc) := false
 
 // the following prevents thousands of meaningless stacktraces by docker plugin on JDK 9
