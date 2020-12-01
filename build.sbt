@@ -26,6 +26,8 @@ version in ThisBuild := {
   }
 }
 
+publishMavenStyle := true
+
 publishTo := Some("GitHub Package Registry" at "https://maven.pkg.github.com/ramencloud/sbt-config")
 credentials ++= {
   (sys.env.get("PUBLISH_TO_GITHUB_USERNAME"), sys.env.get("PUBLISH_TO_GITHUB_TOKEN")) match {
