@@ -1,4 +1,4 @@
-sbtPlugin in ThisBuild := true
+sbtPlugin := true
 
 organization := "com.dotdata"
 name := "sbt-config"
@@ -45,6 +45,7 @@ scmInfo := Some(
   )
 )
 
+enablePlugins(SbtPlugin)
 addSbtPlugin("org.scalameta"  % "sbt-scalafmt"           % "2.4.2")
 addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "1.0.0")
 addSbtPlugin("org.scoverage"  %% "sbt-scoverage"         % "1.5.1")
@@ -55,3 +56,10 @@ publishArtifact in (Compile, packageDoc) := false
 
 // the following prevents thousands of meaningless stacktraces by docker plugin on JDK 9
 libraryDependencies += "javax.activation" % "activation" % "1.1.1" % Test
+
+// Make sure to publish the library locally first
+scripted := scripted.dependsOn(publishLocal).evaluated
+
+// For running integration tests in src/sbt-test
+scriptedLaunchOpts := scriptedLaunchOpts.value ++ Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
+scriptedBufferLog := false
