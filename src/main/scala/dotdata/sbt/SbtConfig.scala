@@ -174,6 +174,9 @@ object SbtConfig extends AutoPlugin {
       if (publishingEnabled) {
         Seq(
           organization := "com.dotdata",
+          // Don't generate docs in production builds
+          sources in (Compile, doc) := Seq.empty,
+          publishArtifact in (Compile, packageDoc) := false,
           publishMavenStyle := true,
           publishTo := {
             // Repository internal caching
