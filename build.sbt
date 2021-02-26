@@ -26,7 +26,7 @@ version := {
   }
 }
 
-publishMavenStyle := false
+publishMavenStyle := true
 
 publishTo := Some("GitHub Package Registry" at "https://maven.pkg.github.com/ramencloud/sbt-config")
 credentials ++= {
