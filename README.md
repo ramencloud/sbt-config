@@ -6,7 +6,11 @@
 
 ### project/plugins.sbt
 
+
+Accessing GitHub Packages requires a valid GITHUB_TOKEN.  It needs to be created with: `public_repo, read:packages` permissions.
+
     resolvers +=  "sbt-config-releases" at "https://maven.pkg.github.com/ramencloud/sbt-config"
+    credentials += Credentials("GitHub Package Registry", "maven.pkg.github.com", "<github-user>", "<GITHUB_TOKEN>")
     addSbtPlugin("com.dotdata" % "sbt-config" % "<latest_version>")
 
 Run `sbt reload` after adding the plugin.
