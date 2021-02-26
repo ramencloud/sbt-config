@@ -130,7 +130,7 @@ object SbtConfig extends AutoPlugin {
       "-Ywarn-value-discard"
     )
 
-    def lintingSettings(failOnWarnings: Boolean = true): Def.SettingsDefinition = {
+    def lintingSettings(failOnWarnings: Boolean = true, scalastyleExcludes: String = ""): Def.SettingsDefinition = {
 
       val scalacOptionsSettings =
         Seq(
@@ -142,9 +142,9 @@ object SbtConfig extends AutoPlugin {
         )
 
       if (failOnWarnings) {
-        scalacOptionsSettings ++ fatalWarningsExceptDeprecation ++ scalastyleSettings()
+        scalacOptionsSettings ++ fatalWarningsExceptDeprecation ++ scalastyleSettings(scalastyleExcludes)
       } else {
-        scalacOptionsSettings ++ scalastyleSettings()
+        scalacOptionsSettings ++ scalastyleSettings(scalastyleExcludes)
       }
     }
 
@@ -197,9 +197,16 @@ object SbtConfig extends AutoPlugin {
       }
     }
 
-    def dotDataSettings(failOnWarnings: Boolean = true, testCoverage: Double = 80.00, publishingEnabled: Boolean = false): Def.SettingsDefinition = {
+    def dotDataSettings(
+      failOnWarnings: Boolean = true, 
+      testCoverage: Double = 80.00,
+      publishingEnabled: Boolean = false,
+      scalastyleExcludes: String = "",
+    ): Def.SettingsDefinition = {
       compilerSettings() ++
-        formatSettings ++ lintingSettings(failOnWarnings) ++ testingSettings ++
+        formatSettings ++
+        lintingSettings(failOnWarnings, scalastyleExcludes) ++
+        testingSettings ++
         coverageSettings(minimumCoverage = testCoverage) ++
         publishSettings(publishingEnabled)
     }
