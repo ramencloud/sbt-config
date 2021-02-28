@@ -17,10 +17,24 @@ Run `sbt reload` after adding the plugin.
 
 ### build.sbt
 
+dotDataSettings defaults:
+
+    dotDataSettings(
+      failOnWarnings: Boolean = true,
+      testCoverage: Double = 80.00,
+      publishingEnabled: Boolean = false
+    )
+
 To use all standard settings, use the following format:
 
     lazy val myProject = (project in file("."))
-      .settings(dotDataSettings(publishingEnabled = false))
+      .settings(dotDataSettings())
+      .settings(... other settings ...
+
+To enable publishing with other default settings:
+
+    lazy val myProject = (project in file("."))
+      .settings(dotDataSettings(publishingEnabled = true))
       .settings(... other settings ...
 
 To opt-out from some settings, use the following format:

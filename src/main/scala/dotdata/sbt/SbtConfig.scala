@@ -178,6 +178,7 @@ object SbtConfig extends AutoPlugin {
           sources in (Compile, doc) := Seq.empty,
           publishArtifact in (Compile, packageDoc) := false,
           publishMavenStyle := true,
+          publishArtifact := true,
           publishTo := {
             // Repository internal caching
             val nexus = Option(System.getProperty("REPOSITORY_URL")).getOrElse("http://ec2-52-38-203-205.us-west-2.compute.amazonaws.com")
@@ -191,8 +192,7 @@ object SbtConfig extends AutoPlugin {
       } else {
         Seq(
           organization := "com.dotdata",
-          publish := {},
-          publishLocal := {}
+          publishArtifact := false
         )
       }
     }
