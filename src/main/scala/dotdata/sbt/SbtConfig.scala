@@ -13,7 +13,7 @@ object SbtConfig extends AutoPlugin {
 
     // Compiler settings
 
-    def compilerSettings(versionOfScala: String = "2.11.11"): Def.SettingsDefinition = {
+    def compilerSettings(versionOfScala: String = "2.12.13"): Def.SettingsDefinition = {
       Seq(
         scalaVersion := versionOfScala,
         fork := true,
