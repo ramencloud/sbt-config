@@ -74,12 +74,10 @@ object SbtConfig extends AutoPlugin {
           IO.write(styleFile, IO.readBytes(stream))
           styleFile
         },
-        testScalastyle := scalastyle.in(Compile).toTask("").value,
-        testScalastyle in (Test, test) := (testScalastyle in (Test, test)).value,
 
         testExecution in (Test, test) := {
-          (testScalastyle in Compile).value
-          (testScalastyle in Test).value
+          (scalastyle.in(Compile).toTask("")).value
+          (scalastyle.in(Test).toTask("")).value
           (testExecution in (Test, test)).value
         }
       )

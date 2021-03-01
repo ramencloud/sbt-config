@@ -1,3 +1,6 @@
-> testScalastyle
+> scalastyle
+> test:scalastyle
+> scalafmtCheckAll
 > compile
+> test
 > publishLocal
