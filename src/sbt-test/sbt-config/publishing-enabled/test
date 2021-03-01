@@ -1,3 +1,5 @@
-> testScalastyle
+> scalastyle
+> test:scalastyle
 > compile
+> test
 > publishLocal
