@@ -76,7 +76,10 @@ object SbtConfig extends AutoPlugin {
       Seq(
         resourceGenerators in Compile += generateScalastyleConfTask.taskValue,
         scalastyleConfig := resourceManaged.value / "scalastyle-config.xml",
-        testScalastyle := scalastyle.in(Compile).toTask("").value,
+        testScalastyle := {
+          generateScalastyleConfTask.value
+          scalastyle.in(Compile).toTask("").value
+        },
         testScalastyle in (Test, test) := {
           generateScalastyleConfTask.value
           (testScalastyle in (Test, test)).value
