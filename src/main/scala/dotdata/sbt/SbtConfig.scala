@@ -52,13 +52,6 @@ object SbtConfig extends AutoPlugin {
     lazy val testScalastyle = taskKey[Unit]("testScalastyle")
 
     def scalastyleSettings(excludes: String = ""): Def.SettingsDefinition = {
-      val generateScalastyleConfTask = Def.task {
-        val stream    = getClass.getClassLoader.getResourceAsStream("scalastyle-config.xml")
-        val styleFile = resourceManaged.value / "scalastyle-config.xml"
-        IO.delete(styleFile)
-        IO.write(styleFile, IO.readBytes(stream))
-        Seq(styleFile)
-      }
 
       if (excludes.nonEmpty) {
         Seq(
@@ -74,18 +67,17 @@ object SbtConfig extends AutoPlugin {
       }
 
       Seq(
-        resourceGenerators in Compile += generateScalastyleConfTask.taskValue,
-        scalastyleConfig := resourceManaged.value / "scalastyle-config.xml",
-        testScalastyle := {
-          generateScalastyleConfTask.value
-          scalastyle.in(Compile).toTask("").value
+        scalastyleConfig := {
+          val stream    = getClass.getClassLoader.getResourceAsStream("scalastyle-config.xml")
+          val styleFile = resourceManaged.value / "scalastyle-config.xml"
+          IO.delete(styleFile)
+          IO.write(styleFile, IO.readBytes(stream))
+          styleFile
         },
-        testScalastyle in (Test, test) := {
-          generateScalastyleConfTask.value
-          (testScalastyle in (Test, test)).value
-        },
+        testScalastyle := scalastyle.in(Compile).toTask("").value,
+        testScalastyle in (Test, test) := (testScalastyle in (Test, test)).value,
+
         testExecution in (Test, test) := {
-          generateScalastyleConfTask.value
           (testScalastyle in Compile).value
           (testScalastyle in Test).value
           (testExecution in (Test, test)).value
