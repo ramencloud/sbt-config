@@ -8,5 +8,6 @@ lazy val root = (project in file("."))
     publishLocal := {
       val x = publishArtifact.value
       assert(x == false, s"publishArtifact should be false: $x")
-    }
+    },
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.5" % Test
   )
