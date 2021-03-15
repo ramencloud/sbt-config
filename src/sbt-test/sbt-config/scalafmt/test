@@ -1,4 +1,11 @@
 > scalafmtCheckAll
 > compile
 > test
+$ exists target/scala-2.12/resource_managed/scalastyle-config.xml
+$ exists target/scala-2.12/resource_managed/scalafmt.conf
+> clean
+# Verify a clean doesn't compromise the resource_managed
+> test
+$ exists target/scala-2.12/resource_managed/scalastyle-config.xml
+$ exists target/scala-2.12/resource_managed/scalafmt.conf
 > publishLocal
