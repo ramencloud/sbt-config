@@ -1,4 +1,4 @@
-package dotdata.sbt
+package com.dotdata.sbt
 
 import org.scalafmt.sbt.ScalafmtPlugin.autoImport._
 import org.scalastyle.sbt.ScalastylePlugin.autoImport._
@@ -8,8 +8,20 @@ import sbt._
 import scala.collection.JavaConverters._
 
 object SbtConfigPlugin extends AutoPlugin {
-
   object autoImport {
+    object DependencyMode {
+      val testAndCompile: String = "test->test;compile->compile"
+      val macros: String = "compile-internal, test-internal"
+    }
+
+    implicit class ProjectUtils(project: Project) {
+      def dependsOnTestAndCompile(dependencies: Project*): Project = {
+        project.dependsOn(dependencies.map(_ % DependencyMode.testAndCompile):_*)
+      }
+      def dependsOnMacros(dependencies: Project*): Project = {
+        project.dependsOn(dependencies.map(_ % DependencyMode.macros):_*)
+      }
+    }
 
     // Compiler settings
 
@@ -249,7 +261,6 @@ object SbtConfigPlugin extends AutoPlugin {
         coverageSettings(minimumCoverage = testCoverage) ++
         publishSettings(publishingEnabled)
     }
-
   }
 
 }
