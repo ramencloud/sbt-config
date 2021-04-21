@@ -14,6 +14,12 @@ object SbtConfigPlugin extends AutoPlugin {
       val macros: String = "compile-internal, test-internal"
     }
 
+    sealed trait PublishingLocation
+    object PublishingLocation {
+      case object DotDataNexus extends PublishingLocation
+      case object GitHub extends PublishingLocation
+    }
+
     implicit class ProjectUtils(project: Project) {
       def dependsOnTestAndCompile(dependencies: Project*): Project = {
         project.dependsOn(dependencies.map(_ % DependencyMode.testAndCompile):_*)
@@ -221,25 +227,42 @@ object SbtConfigPlugin extends AutoPlugin {
 
     // Publishing
 
-    def publishSettings(publishingEnabled: Boolean): Def.SettingsDefinition = {
+    def publishSettings(publishingEnabled: Boolean, publishingLocation: PublishingLocation): Def.SettingsDefinition = {
       if (publishingEnabled) {
-        Seq(
+        val commonPublishingSettings = Seq(
           organization := "com.dotdata",
           // Don't generate docs in production builds
           Compile / doc / sources := Seq.empty,
           Compile / packageDoc / publishArtifact := false,
           publishMavenStyle := true,
-          publishArtifact := true,
-          publishTo := {
-            // Repository internal caching
-            val nexus = Option(System.getProperty("REPOSITORY_URL")).getOrElse("http://ec2-52-38-203-205.us-west-2.compute.amazonaws.com")
-            if (isSnapshot.value) {
-              Some(("snapshots" at nexus + "/repository/maven-snapshots;build.timestamp=" + new java.util.Date().getTime).withAllowInsecureProtocol(true))
-            } else {
-              Some(("releases" at nexus + "/repository/maven-releases").withAllowInsecureProtocol(true))
-            }
-          }
+          publishArtifact := true
         )
+
+        publishingLocation match {
+          case PublishingLocation.DotDataNexus =>
+            commonPublishingSettings ++ Seq(
+              publishTo := {
+                // Repository internal caching
+                val nexus = Option(System.getProperty("REPOSITORY_URL")).getOrElse("http://ec2-52-38-203-205.us-west-2.compute.amazonaws.com")
+                if (isSnapshot.value) {
+                  Some(("snapshots" at nexus + "/repository/maven-snapshots;build.timestamp=" + new java.util.Date().getTime).withAllowInsecureProtocol(true))
+                } else {
+                  Some(("releases" at nexus + "/repository/maven-releases").withAllowInsecureProtocol(true))
+                }
+              }
+            )
+          case PublishingLocation.GitHub =>
+            commonPublishingSettings ++ Seq(
+              publishTo := Some("GitHub Package Registry" at "https://maven.pkg.github.com/ramencloud/scala-flat-json-format"),
+              credentials ++= {
+                (sys.env.get("PUBLISH_TO_GITHUB_USERNAME"), sys.env.get("PUBLISH_TO_GITHUB_TOKEN")) match {
+                  case (Some(user), Some(pass)) =>
+                    Seq(Credentials("GitHub Package Registry", "maven.pkg.github.com", user, pass))
+                  case _ => Nil
+                }
+              }
+            )
+        }
       } else {
         Seq(
           organization := "com.dotdata",
@@ -252,6 +275,7 @@ object SbtConfigPlugin extends AutoPlugin {
         failOnWarnings: Boolean = true,
         testCoverage: Double = 80.00,
         publishingEnabled: Boolean = false,
+        publishingLocation: PublishingLocation = PublishingLocation.DotDataNexus,
         scalastyleExcludes: String = "",
     ): Def.SettingsDefinition = {
       compilerSettings() ++
@@ -259,7 +283,25 @@ object SbtConfigPlugin extends AutoPlugin {
         lintingSettings(failOnWarnings, scalastyleExcludes) ++
         testingSettings ++
         coverageSettings(minimumCoverage = testCoverage) ++
-        publishSettings(publishingEnabled)
+        publishSettings(publishingEnabled, publishingLocation)
+    }
+
+    def githubRunNumberBasedVersion(majorVersion: String, mainBranchName: String = "main"): String = {
+      if (sys.env.get("GITHUB_REF").contains(s"refs/heads/$mainBranchName")) {
+        s"$majorVersion.${sys.env("GITHUB_RUN_NUMBER")}"
+      } else {
+        val githubVersion =
+          for {
+            runId <- sys.env.get("GITHUB_RUN_NUMBER")
+            sha <- sys.env.get("GITHUB_SHA")
+          } yield {
+            s"$majorVersion.$runId-$sha"
+          }
+
+        val localDevVersion = s"$majorVersion.0-SNAPSHOT"
+
+        githubVersion.getOrElse(localDevVersion)
+      }
     }
   }
 
