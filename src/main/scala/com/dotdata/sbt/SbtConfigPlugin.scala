@@ -17,7 +17,7 @@ object SbtConfigPlugin extends AutoPlugin {
     sealed trait PublishingLocation
     object PublishingLocation {
       case object DotDataNexus extends PublishingLocation
-      case object GitHub extends PublishingLocation
+      case class GitHub(repoName: String) extends PublishingLocation
     }
 
     implicit class ProjectUtils(project: Project) {
@@ -251,9 +251,9 @@ object SbtConfigPlugin extends AutoPlugin {
                 }
               }
             )
-          case PublishingLocation.GitHub =>
+          case PublishingLocation.GitHub(githubRepoName) =>
             commonPublishingSettings ++ Seq(
-              publishTo := Some("GitHub Package Registry" at "https://maven.pkg.github.com/ramencloud/scala-flat-json-format"),
+              publishTo := Some("GitHub Package Registry" at ("https://maven.pkg.github.com/ramencloud/" + githubRepoName)),
               credentials ++= {
                 (sys.env.get("PUBLISH_TO_GITHUB_USERNAME"), sys.env.get("PUBLISH_TO_GITHUB_TOKEN")) match {
                   case (Some(user), Some(pass)) =>
