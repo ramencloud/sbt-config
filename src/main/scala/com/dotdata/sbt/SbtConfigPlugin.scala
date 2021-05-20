@@ -31,7 +31,7 @@ object SbtConfigPlugin extends AutoPlugin {
 
     // Compiler settings
 
-    def compilerSettings(versionOfScala: String = "2.12.12"): Def.SettingsDefinition = {
+    def compilerSettings(versionOfScala: String = "2.12.13"): Def.SettingsDefinition = {
       Seq(
         scalaVersion := versionOfScala,
         fork := true,
@@ -135,74 +135,57 @@ object SbtConfigPlugin extends AutoPlugin {
       )})
     }
 
-    // Deprecations are not immediate and need a notice
-    val fatalWarningsExceptDeprecation: Def.SettingsDefinition =
-      Seq(Compile, Test).flatMap(inConfig(_) {
+    private def scalacLintingSettings(failOnWarnings: Boolean): Seq[String] = {
+      val commonScalacOptions = Seq(
+        s"-Wconf:cat=deprecation:warning,any:${if (failOnWarnings) "error" else "warning"}",
+        "-Xlint",
+        "-unchecked",
+        "-feature",
+      )
 
-        compile := {
-          val compiled = compile.value
-          if (scalacOptions.value.contains("-Xfatal-warnings")) {
-            val problems = compiled.readSourceInfos().getAllSourceInfos.asScala.flatMap {
-              case (_, info) =>
-                info.getReportedProblems
-            }
-
-            val deprecationsOnly = problems.forall { problem =>
-              problem.message().contains("is deprecated")
-            }
-
-            if (!deprecationsOnly) sys.error("Fatal warnings: some warnings other than deprecations were found.")
-            compiled
-          } else {
-            compiled
-          }
-        }
-      })
-
-    val scalacLintingSettings: Seq[String] = Seq(
-      "-Xlint:_,-unused,-missing-interpolator",
-      "-unchecked",
-      "-deprecation",
-      "-feature",
-      // Later consider "-Ywarn-numeric-widen",
-      "-Ywarn-dead-code",
-      "-Ywarn-unused-import",
-      "-Yno-adapted-args",
-      "-Ywarn-unused:_,-explicits,-implicits"
-    )
+      // Some of the warning flags were removed in 2.13, and the "-Ywarn-"
+      // prefix was deprecated in favor of "-W"
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, 13)) => commonScalacOptions ++ Seq(
+          "-Wdead-code",
+          "-Wunused:_,-explicits,-implicits",
+          "-Wvalue-discard",
+        )
+        case Some((2, 12)) => commonScalacOptions ++ Seq(
+          "-Ywarn-dead-code",
+          "-Ywarn-unused-import",
+          "-Yno-adapted-args",
+          "-Ywarn-unused:_,-explicits,-implicits",
+          "-Ywarn-value-discard",
+        )
+        case _ => commonScalacOptions
+      }
+    }
 
     // Allow some behavior while interactively working on Scala code from the REPL
-    private val scalacOptionsConsoleExclusions: Seq[String] = Seq(
-      "-Xlint",
-      "-Xlint:_,-unused,-missing-interpolator",
-      "-unchecked",
-      "-Xfatal-warnings",
-      "-Ywarn-unused-import",
-      "-Ywarn-value-discard",
-      "-Ywarn-dead-code",
-      "-Ywarn-unused:_,-explicits,-implicits",
-    )
+    private def filterForConsole(base: Seq[String]): Seq[String] = {
+      val filtered = base
+        .filterNot(_.startsWith("-W"))
+        .filterNot(_.startsWith("-Ywarn-"))
+        .filterNot(_.startsWith("-Xlint"))
 
-    private val scalacOptionsNotInTest: Seq[String] = Seq(
-      "-Ywarn-value-discard"
-    )
+      "-Wconf:any:silent" +: filtered
+    }
+
+    private def filterForTest(base: Seq[String]): Seq[String] =
+      base.filterNot(_.endsWith("value-discard"))
 
     def lintingSettings(failOnWarnings: Boolean = true, scalastyleExcludes: String = ""): Def.SettingsDefinition = {
 
       val scalacOptionsSettings =
         Seq(
-          scalacOptions ++= scalacLintingSettings,
-          Compile / scalacOptions ++= scalacOptionsNotInTest,
-          Test / scalacOptions --= scalacOptionsNotInTest,
-          Compile / console / scalacOptions --= scalacOptionsConsoleExclusions,
-          Test / console / scalacOptions --= scalacOptionsConsoleExclusions
+          scalacOptions ++= scalacLintingSettings(failOnWarnings),
+          Test / compile / scalacOptions := filterForTest((Compile / compile / scalacOptions).value),
+          Compile / console / scalacOptions := filterForConsole((Compile / compile / scalacOptions).value),
+          Test / console / scalacOptions := (Compile / console / scalacOptions).value
         )
 
-      if (failOnWarnings) {
-        scalacOptionsSettings ++ fatalWarningsExceptDeprecation ++ scalastyleSettings(scalastyleExcludes)
-      } else {
-        scalacOptionsSettings ++ scalastyleSettings(scalastyleExcludes)
-      }
+      scalacOptionsSettings ++ scalastyleSettings(scalastyleExcludes)
     }
 
     // Testing
