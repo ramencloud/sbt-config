@@ -135,7 +135,7 @@ object SbtConfigPlugin extends AutoPlugin {
       )})
     }
 
-    private def scalacLintingSettings(failOnWarnings: Boolean): Seq[String] = {
+    private def scalacLintingSettings(versionString: String, failOnWarnings: Boolean): Seq[String] = {
       val commonScalacOptions = Seq(
         s"-Wconf:cat=deprecation:warning,any:${if (failOnWarnings) "error" else "warning"}",
         "-Xlint",
@@ -145,7 +145,7 @@ object SbtConfigPlugin extends AutoPlugin {
 
       // Some of the warning flags were removed in 2.13, and the "-Ywarn-"
       // prefix was deprecated in favor of "-W"
-      CrossVersion.partialVersion(scalaVersion.value) match {
+      CrossVersion.partialVersion(versionString) match {
         case Some((2, 13)) => commonScalacOptions ++ Seq(
           "-Wdead-code",
           "-Wunused:_,-explicits,-implicits",
@@ -179,7 +179,7 @@ object SbtConfigPlugin extends AutoPlugin {
 
       val scalacOptionsSettings =
         Seq(
-          scalacOptions ++= scalacLintingSettings(failOnWarnings),
+          scalacOptions ++= scalacLintingSettings(scalaVersion.value, failOnWarnings),
           Test / compile / scalacOptions := filterForTest((Compile / compile / scalacOptions).value),
           Compile / console / scalacOptions := filterForConsole((Compile / compile / scalacOptions).value),
           Test / console / scalacOptions := (Compile / console / scalacOptions).value
