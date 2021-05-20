@@ -2,7 +2,7 @@ sbtPlugin := true
 
 organization := "com.dotdata"
 name := "sbt-config"
-scalaVersion := "2.12.12"
+scalaVersion := "2.12.13"
 homepage := Some(url("https://github.com/ramencloud/sbt-config"))
 licenses := Seq("Apache 2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
 

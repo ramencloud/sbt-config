@@ -3,7 +3,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "sbt-config-test-default",
     version := "0.1",
-    scalaVersion := "2.12.12",
+    scalaVersion := "2.12.13",
     // Default publishArtifact is false
     publishLocal := {
       val x = publishArtifact.value
