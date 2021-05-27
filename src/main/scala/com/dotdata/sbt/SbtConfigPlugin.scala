@@ -138,7 +138,7 @@ object SbtConfigPlugin extends AutoPlugin {
     private def scalacLintingSettings(versionString: String, failOnWarnings: Boolean): Seq[String] = {
       val commonScalacOptions = Seq(
         s"-Wconf:cat=deprecation:warning,any:${if (failOnWarnings) "error" else "warning"}",
-        "-Xlint",
+        "-Xlint:_,-unused,-missing-interpolator",
         "-unchecked",
         "-feature",
       )
