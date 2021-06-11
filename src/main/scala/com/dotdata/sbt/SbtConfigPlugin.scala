@@ -204,7 +204,13 @@ object SbtConfigPlugin extends AutoPlugin {
         coverageExcludedPackages := excludedPackages,
         coverageMinimum := minimumCoverage,
         coverageFailOnMinimum := failOnMinimum,
-        coverageHighlighting := true
+        coverageHighlighting := true,
+        Test / test := {
+          coverageReport.dependsOn(Test / test).value
+        },
+        IntegrationTest / compile / coverageEnabled := true,
+        Test / compile / coverageEnabled := true,
+        Compile / compile / coverageEnabled := false
       )
     }
 
