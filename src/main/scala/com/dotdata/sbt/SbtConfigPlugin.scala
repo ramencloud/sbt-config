@@ -2,6 +2,7 @@ package com.dotdata.sbt
 
 import org.scalafmt.sbt.ScalafmtPlugin.autoImport._
 import org.scalastyle.sbt.ScalastylePlugin.autoImport._
+import sbtassembly.ShadeRule
 import scoverage.ScoverageKeys._
 import sbt.Keys._
 import sbt._
@@ -302,6 +303,15 @@ object SbtConfigPlugin extends AutoPlugin {
 
         githubVersion.getOrElse(localDevVersion)
       }
+    }
+
+    def DatabricksAssemblyShadeRules: Seq[ShadeRule] = sys.env.get("BUILD_FOR_DATABRICKS") match {
+      case Some(buildForDatabricks) if Seq("true", "enabled").contains(buildForDatabricks) =>
+        Seq(
+          ShadeRule.rename("com.typesafe.config.**" -> "shadeio.config.@1").inAll,
+          ShadeRule.rename("cats.**" -> "shadeio.cats.@1").inAll
+        )
+      case _ => Seq.empty
     }
   }
 
